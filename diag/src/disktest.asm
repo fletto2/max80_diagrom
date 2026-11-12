@@ -529,53 +529,36 @@ dsc3:	ld	a,(dvd+3)
 	ret
 
 ; One READ ADDRESS into did. NC and A = the status if an ID came, CY
-; if not. The waits count loops, not ticks: a tick poll between two
-; bytes would lose one.
+; if not. The bytes are taken as the boot ROM takes them, DRQ tested
+; every 45 T-states at most while nothing comes: 8-inch MFM gives a
+; byte every 16 us, 81 T-states, and a slower loop lost one, so every
+; read ended short. A tick poll between two bytes would lose one too.
 dkid1:	ld	a,0C4h xor 0FFh		; read address, 15 ms settle
 	ld	(FCTRL),a
 	ld	b,40
 dki3:	djnz	dki3
-	ld	d,3			; about 2 s for the first byte
-	ld	bc,0
-dki4:	ld	a,(USTAT)
-	bit	7,a
-	jr	z,dki6			; DRQ
-	bit	6,a
-	jp	z,dknone		; INTRQ with no byte: no ID found
-	dec	bc
-	ld	a,b
-	or	c
-	jr	nz,dki4
-	dec	d
-	jr	nz,dki4
-	jp	dkstop
-dki6:	ld	hl,did
-	ld	b,6
-	ld	de,0
-dki7:	ld	a,(USTAT)
-	bit	7,a
-	jr	z,dki8
-	bit	6,a
-	jr	z,dknone		; ended short
-	dec	de
-	ld	a,d
-	or	e
-	jr	nz,dki7
-	jr	dkstop
-dki8:	ld	a,(FDATA)
+	ld	de,did
+	ld	hl,USTAT		; DRQ- bit 7, INTRQ- bit 6
+	ld	bc,FDATA
+	ld	ix,0			; about 0.6 s with nothing coming
+dkr1:	ld	a,0C0h
+dkr2:	and	(hl)			; a bit cleared by DRQ or INTRQ
+	jp	m,dkr3			; no DRQ
+	ld	a,(bc)
 	cpl
-	ld	(hl),a
-	inc	hl
-	djnz	dki7
-	ld	de,0
-dki9:	ld	a,(USTAT)
-	bit	6,a
-	jr	z,dki10
-	dec	de
-	ld	a,d
-	or	e
-	jr	nz,dki9
-	jr	dkstop
+	ld	(de),a
+	inc	de
+	jp	dkr1
+dkr3:	jp	po,dkr4			; INTRQ: the command is over
+	dec	ixl
+	jp	nz,dkr2
+	dec	ixh
+	jp	nz,dkr2
+	jp	dkstop
+dkr4:	ld	hl,did+6		; six bytes, or no ID was found
+	or	a
+	sbc	hl,de
+	jp	nz,dknone
 dki10:	ld	a,(FSTAT)
 	cpl
 	bit	4,a			; record not found
