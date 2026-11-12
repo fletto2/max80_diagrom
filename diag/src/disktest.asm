@@ -18,6 +18,7 @@ dktest:	xor	a
 	ld	(dmotor),a
 	ld	(dhead),a
 	ld	(kkey),a
+	ld	(dkpend),a
 	ld	(dres),a
 	ld	(dfm),a
 	ld	h,a
@@ -37,7 +38,7 @@ dktest:	xor	a
 	call	dhload			; head unloaded
 dk1:	call	dkeep
 	call	dshow
-	call	inkey
+	call	dkkey
 	jr	nz,dk2
 	call	dspeed
 	jr	dk1
@@ -198,7 +199,10 @@ dhload:	ld	hl,(ticks)
 ; Type I command A, with the head load bit and the step rate added, and
 ; wait for it to finish, into dres. No verify, so no disk is needed. ESC
 ; or BREAK stops it, as does an FDC still busy after DCMDT ticks, with a
-; force interrupt. Other keys are dropped.
+; force interrupt. Another key waits in dkpend for the test's own loop,
+; with kkey left free for ESC: the seek in place each second that keeps
+; the head loaded runs here, and a key dropped then had to be pressed
+; again.
 dcmd:	ld	b,a
 	ld	a,(dhead)
 	or	a
@@ -221,6 +225,7 @@ dc3:	call	inkey
 	jr	z,dcstop
 	cp	03h			; BREAK
 	jr	z,dcstop
+	ld	(dkpend),a		; kept for the test's loop
 dc4:	ld	a,(FSTAT)
 	cpl
 	rra
@@ -242,6 +247,16 @@ dcok:	ld	c,1
 dc5:	pop	de
 	ld	a,c
 	ld	(dres),a
+	ret
+
+; A key for the test's loop: the one dcmd kept, else inkey's. NZ if one.
+dkkey:	ld	a,(dkpend)
+	or	a
+	jp	z,inkey
+	push	af
+	xor	a
+	ld	(dkpend),a
+	pop	af
 	ret
 
 ; Keep the 5.25-inch motor on with a latch write, and the head loaded
