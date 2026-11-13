@@ -45,7 +45,7 @@ spl2:	ld	ix,spa			; a byte on channel A is a key too,
 	call	sprx			; but while a channel sends the line
 	jr	nc,spl3			; only ESC and ^C: a loopback onto
 	ld	c,a			; RxD A read its letters as keys,
-	ld	a,(spa+SPSEND)		; T, C, K, R, B and S (I293)
+	ld	a,(spa+SPSEND)		; T, C, K, R, B and S
 	ld	hl,spb+SPSEND
 	or	(hl)
 	ld	a,c

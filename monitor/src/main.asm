@@ -15,7 +15,7 @@ main:	di
 	ld	(hl),0
 	ldir
 	ld	hl,0F00h		; poll's own ticks until a tick
-	ld	(pcnt),hl		; comes: a dead one from boot (I294)
+	ld	(pcnt),hl		; comes: a dead one from boot
 	ld	a,high BLK
 	ld	(blkhi),a
 	ld	a,1
@@ -428,7 +428,7 @@ gl1:	push	bc
 	jr	nc,gl1
 	ld	a,(ccol)		; nor past the screen's last column:
 	cp	79			; a wrapped line's rub out wrote
-	jr	nc,gl1			; outside the screen (I292)
+	jr	nc,gl1			; outside the screen
 	ld	a,c
 	cp	'"'
 	call	z,qflip
@@ -701,7 +701,7 @@ ovl:	ld	e,(ix+1)
 	jr	c,ov1
 	ex	de,hl
 	ld	bc,0F7FEh		; PIOCA too: a mode word maps the
-	call	cmphl			; monitor out (I292)
+	call	cmphl			; monitor out
 	ex	de,hl
 	ret	c
 	jr	ov1

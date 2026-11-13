@@ -743,7 +743,7 @@ dsh14:	ld	hl,7*256+8
 	jr	nz,dsh15
 	ld	a,(pcnt+1)		; no tick to time the index by: say
 	cp	0Fh			; so, not NO INDEX on a good drive
-	jr	c,dsh14a		; (I294)
+	jr	c,dsh14a		;
 	call	print
 	db	"NO TICK ",0
 	jr	dsh16

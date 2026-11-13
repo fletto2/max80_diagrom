@@ -17,7 +17,7 @@ The boot ROM tries MFM, then FM, so either density boots, and the boot
 sector reads the rest at the density the ROM found. Sector 1 holds a
 copy of the boot sector, and the program starts in sector 2: when
 sector 0 cannot be read, the ROM loads sector 1 and the disk still
-boots (I294). `tools/mkdisk.py --bad0` makes a disk with sector 0
+boots. `tools/mkdisk.py --bad0` makes a disk with sector 0
 unreadable, for the test.
 
 ## Menu
@@ -78,14 +78,14 @@ and the serial port giving the chunk, the March U step and the errors
 so far.
 
 1. Bank B is looked for: it is there if any bit of B1 keeps a 0 and a
-   1, so a bank with a dead 4164 is tested and the 4164 named (I293).
+   1, so a bank with a dead 4164 is tested and the 4164 named.
    Without it only A1 and A2 are tested.
 2. Banking, high half: each chunk gets its own tag, A1h, A2h, B1h or
    B2h, then each is read back. A chunk that shows another's tag, where
    a write to it reaches that chunk, is decoded wrong. Both chunks are
    left out of the March U test, since a march on a chunk that lands in
    A1 would wipe out the program. A wrong tag that a write does not
-   carry over is a bad cell, and March U names it (I293).
+   carry over is a bad cell, and March U names it.
 3. March U on A2, B1 and B2, 13 operations a byte: up w0, up r0 w1 r1
    w0, up r0 w1, down r1 w0 r0 w1, down r1 w0. Every error is counted
    and its bits kept, so one bad bit does not hide another.
@@ -169,7 +169,7 @@ FDC's type I status. Single sided and the 5.25-inch motors are SYSFLG
 bits 4 and 5. The speed is timed over four turns between index pulses,
 against the 61.035 Hz tick. NO INDEX means no pulse came in a second.
 NO TICK means the tick is not coming, so nothing could be timed
-(I294).
+.
 There is no head lock line on either connector, and the 8-inch one has
 no motor line.
 
@@ -210,7 +210,7 @@ received. CTS, DCD and break on RxD are read live from RR0. The bytes
 received are counted and the last 8 shown in hex. A byte on channel A
 is also taken as a key, so a terminal there can run the test, but not
 while either channel sends the test line: then only ESC and ^C are
-keys, so a loopback onto RxD A shows the line coming back (I293). The Z80
+keys, so a loopback onto RxD A shows the line coming back. The Z80
 SIO has no loopback mode, so an output is checked with a scope or
 meter, or by wiring it to an input of the same port. ESC sets channel
 A back to 9600 and resets channel B, which turns its outputs off.
@@ -308,7 +308,7 @@ VT100 cursor moves, and keys typed on a terminal there work as the
 keyboard does. The program does not use the SIO's auto enables, so a
 cable with nothing on CTS and DCD works. If the transmitter never
 empties, the copy turns itself off. A missing SIO, whose status reads
-FFh, is not taken for a key (I294).
+FFh, is not taken for a key.
 
 ## Memory
 
@@ -319,7 +319,7 @@ the stack, the screen copy and the variables are
 in A1 below 8000h. Interrupts stay off, and the tick is polled.
 If the tick stops, stuck clear or set, the program counts its own
 polls instead, about 4096 a tick, so the keys, the pauses and the
-timeouts still work, slower or faster (I294).
+timeouts still work, slower or faster.
 
 ## Files
 

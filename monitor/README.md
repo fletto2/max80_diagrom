@@ -32,7 +32,7 @@ chunk form reaches all of a chunk, the part under the I/O block too.
 | `D addr [len]` | Dump, 21 lines a screen, or to the end of memory or the chunk. `D` alone goes on |
 | `E addr` | Edit: hex and Enter writes and reads back, Enter alone goes on, a dot or ESC ends |
 | `F addr len byte` | Fill |
-| `M from to len` | Move, also between chunks and over itself. From a Z80 range across 8000h to a chunk address it says to move each side by itself (I292) |
+| `M from to len` | Move, also between chunks and over itself. From a Z80 range across 8000h to a chunk address it says to move each side by itself |
 | `S addr len bytes` | Search: hex bytes, a `"string"`, or both, up to 32 bytes. The first 16 places, then a count |
 | `C addr addr len` | Compare: the first 16 differences, then a count |
 | `K addr len` | An 8-bit sum and CRC-16/XMODEM |
@@ -60,7 +60,7 @@ order, A1, A2, B1 and B2. S9 and S8 end it and give the start for `G`, an S8 sta
 that is there. S0, S5 and S6 are skipped. Anything before the first
 record is skipped, a banner, and an S with no type digit after it is a
 word in it. After the first record only blanks and line ends: a record
-whose S was lost stops the load at its line (I292). Nothing
+whose S was lost stops the load at its line. Nothing
 is shown and nothing is sent until the end. A bad line stops the load
 with its number, and the rest of the file is waited out, not run as
 commands, for up to 8K bytes. RTS is not used.

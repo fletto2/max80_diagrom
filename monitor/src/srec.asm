@@ -45,7 +45,7 @@ rdbyte:	call	rdch
 
 ; Waits until channel A has been quiet for about 40 ms, so that the rest
 ; of a file is not taken for commands, or 8K bytes have gone by: a sender
-; that never stops, or noise, does not hang the monitor (I292). Keeps BC.
+; that never stops, or noise, does not hang the monitor. Keeps BC.
 drain:	push	bc
 	ld	bc,8192
 dr0:	ld	de,5000
@@ -81,7 +81,7 @@ cL:	call	endl
 ; Before the first record anything is skipped, a banner, and an S with
 ; no type digit after it is a word in it. After the first only blanks
 ; and line ends: a lost S, or a lost byte of one, stops the load at that
-; line, where the rest of a record was taken for text (I292)
+; line, where the rest of a record was taken for text
 cl1:	call	rdch
 	ld	c,a
 	and	0DFh

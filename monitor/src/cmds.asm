@@ -241,7 +241,7 @@ cM:	call	getaddr
 	ld	a,(refa)		; from a Z80 range across 8000h to a
 	inc	a			; chunk address: its two halves are two
 	jr	nz,cmx			; chunks, and one tested place cannot
-	ld	a,(refb)		; tell an overlap with the upper (I292)
+	ld	a,(refb)		; tell an overlap with the upper
 	inc	a
 	jr	z,cmx
 	ld	hl,(refa+1)

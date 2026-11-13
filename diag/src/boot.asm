@@ -6,7 +6,7 @@
 ; call as Lobo's boot sectors do, moves the I/O block to F000h and jumps
 ; in. tools/mkdisk.py sets the sectors a track at offset 2. Sector 1 is a
 ; copy of this one: when sector 0 cannot be read the ROM loads sector 1
-; to 0400h and runs it, which was the program's middle (I294). The
+; to 0400h and runs it, which was the program's middle. The
 ; program starts at sector 2.
 
 	org	0400h

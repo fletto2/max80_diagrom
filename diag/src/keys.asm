@@ -6,7 +6,7 @@
 ; lets happen, it takes one itself, then one every 256 polls until a
 ; tick comes, so a tick stuck clear, or stuck set,
 ; which a read of SYSCLR does not clear, leaves the keys working and the
-; timeouts ending (I294).
+; timeouts ending.
 poll:	push	af
 	ld	a,(SYSFLG)
 	and	80h
@@ -159,7 +159,7 @@ ik2:	or	a
 
 ; Carry if channel A has a byte. RR0 reading FFh, which a working SIO
 ; never shows, is a dead or missing SIO, not a byte on each read: it
-; stopped the keyboard test and the disk test's speed (I294).
+; stopped the keyboard test and the disk test's speed.
 sioa:	ld	a,(SIOCA)
 	cp	0FFh
 	jr	z,sa1

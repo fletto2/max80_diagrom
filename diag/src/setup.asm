@@ -99,7 +99,7 @@ NGLYPH	equ	($-gtab)/16
 ; is written before its neighbour, then read back, so a floating bus
 ; that reads FFh, or holds the last byte written, keeps no bit of it. A
 ; bank with a dead 4164 keeps the other bits and is tested, where a bad
-; bit at 8000h or 8001h called it not there (I293).
+; bit at 8000h or 8001h called it not there.
 findb:	ld	a,80h			; B1 high
 	ld	(B_PIODA),a
 	ld	hl,8000h

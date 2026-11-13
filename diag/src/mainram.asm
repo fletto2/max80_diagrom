@@ -212,7 +212,7 @@ bh4:	call	ctag
 ; tag it shows only if a write to C reaches that chunk: then a march on
 ; either could land on the program, and both are unsafe. Else a cell
 ; under the tag is bad, a data fault the march names: C counts as
-; decoded right (I293), where it was called aliased and never marched.
+; decoded right, where it was called aliased and never marched.
 bhbad:	push	bc
 	push	hl
 	ld	e,(hl)

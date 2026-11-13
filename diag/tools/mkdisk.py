@@ -9,7 +9,7 @@ sectors, 3:1 interleave, 308K, or with --525 MFM, 40 tracks of 9
 sectors, 2:1 interleave, 180K. The boot ROM tries both densities, and
 the boot sector reads the rest at the one the ROM found. Sector 1 holds
 a copy of the boot sector, which the ROM runs when sector 0 cannot be
-read (I294). The program follows it in sector order, and the rest of
+read. The program follows it in sector order, and the rest of
 the disk holds E5h. --bad0, for the tests, writes sector 0 with a data
 error.
 """
