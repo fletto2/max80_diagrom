@@ -206,7 +206,10 @@ lwrite:	ld	ix,refc
 	ret
 
 ; S9 and S8: the end, and the start for G
-cl90:	ld	a,(BUF)
+cl90:	ld	a,e			; 2 address bytes and the sum
+	cp	3
+	jp	c,lbad
+	ld	a,(BUF)
 	ld	h,a
 	ld	a,(BUF+1)
 	ld	l,a
@@ -216,7 +219,10 @@ cl90:	ld	a,(BUF)
 	ld	a,h
 	or	l
 	jr	cl95
-cl80:	ld	a,(BUF)
+cl80:	ld	a,e			; 3 address bytes and the sum
+	cp	4
+	jp	c,lbad
+	ld	a,(BUF)
 	ld	h,a
 	ld	a,(BUF+1)
 	ld	l,a
@@ -322,7 +328,8 @@ cp1:	ld	de,32
 	ld	(pn),bc
 	ld	de,BUF
 	call	getp
-	xor	a
+	call	mnorm			; sent with the block at F000h: no
+	xor	a			; serial write in a chunk read
 	ld	(psum),a
 	ld	a,'S'
 	call	sout

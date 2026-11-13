@@ -36,7 +36,7 @@ chunk form reaches all of a chunk, the part under the I/O block too.
 | `S addr len bytes` | Search: hex bytes, a `"string"`, or both, up to 32 bytes. The first 16 places, then a count |
 | `C addr addr len` | Compare: the first 16 differences, then a count |
 | `K addr len` | An 8-bit sum and CRC-16/XMODEM |
-| `G [addr]` | Go, a `RET` comes back. Alone, the start an S-record file gave. Z80 addresses only |
+| `G [addr]` | Go, a `RET` comes back. Alone, the start an S-record file gave. A chunk address runs only where the map shows that chunk |
 | `L` | Load S-records from channel A |
 | `P addr len` | Punch S-records to channel A alone |
 | `T addr len` | Test: 55h, AAh, 00h, FFh and the address, each written over all of it and read back. One pass |
@@ -48,9 +48,11 @@ SHIFT gives the TRS-80 symbols on the digits and punctuation. Outside
 quotes everything is taken as upper case.
 
 `F`, `M`, `T`, `L` and `E` refuse the monitor's own memory: the program
-from 1000h and 7000h-7FFFh of the chunk in the low half. A Z80 address
+from 1000h and 7000h-7FFFh of the chunk in the low half, and with the
+monitor in A1, F400h-FBFFh, whose writes land there. A Z80 address
 in the block at F000h says so and asks before a command goes on, since
-reads reach the devices.
+reads reach the devices, and `E` asks again when it steps into the
+block.
 
 `L` takes S1 records, and S2 where 00000h-1FFFFh are the four chunks in
 order, A1, A2, B1 and B2. S9 and S8 end it and give the start for `G`. S0, S5 and S6 are skipped, and anything between records. Nothing

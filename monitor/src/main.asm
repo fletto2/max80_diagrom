@@ -240,6 +240,26 @@ mnorm:	ld	a,(curmap)
 	ld	(curmap),a
 	jp	mblkf
 
+; A = the chunk in the high half of the normal map. Keeps BC, DE, HL.
+hich:	ld	a,(pionow)
+	rlca
+	rlca
+	and	3
+	ret
+
+; A = the chunk and HL the offset of the address at IX, a Z80 address
+; taken through the normal map. Keeps BC, DE.
+pnorm:	ld	l,(ix+1)
+	ld	h,(ix+2)
+	ld	a,(ix+0)
+	cp	0FFh
+	ret	nz
+	bit	7,h
+	ld	a,(lowch)
+	ret	z
+	res	7,h
+	jr	hich
+
 ; HL = where the Z80 sees the address at IX, the map set for it. The
 ; monitor's own chunk is read through the low half with the block at
 ; F000h. Keeps BC, DE.
@@ -643,11 +663,29 @@ cr1:	ret	nc
 	jp	epast
 
 ; Carry if the rlen bytes at IX reach the monitor: the program or
-; 7000h-7FFFh of the chunk in the low half.
+; 7000h-7FFFh of the chunk in the low half. A write at F400h-FBFFh
+; lands in A1 at 7400h-7BFFh, so with the monitor in A1 those too.
 over:	ld	a,(ix+0)
 	cp	0FFh
-	jr	z,ov1
-	ld	hl,lowch
+	jr	nz,ov0
+	ld	a,(lowch)
+	or	a
+	jr	nz,ov1
+	ld	e,(ix+1)
+	ld	d,(ix+2)
+	ld	hl,(rlen)
+	dec	hl
+	add	hl,de			; HL = the last byte, DE = the first
+	ld	bc,0F400h
+	call	cmphl
+	jr	c,ov1
+	ex	de,hl
+	ld	bc,0FC00h
+	call	cmphl
+	ex	de,hl
+	ret	c
+	jr	ov1
+ov0:	ld	hl,lowch
 	cp	(hl)
 	jr	z,ov1
 	or	a

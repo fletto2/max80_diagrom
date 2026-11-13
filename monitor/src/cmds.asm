@@ -108,6 +108,7 @@ cE:	call	getaddr
 	ld	hl,1
 	ld	(rlen),hl
 	call	chkrng
+	call	blkask
 ce0:	call	rd1
 	ld	(ebyte),a
 	call	mnorm
@@ -166,7 +167,15 @@ ce5:	ld	bc,1
 	call	adv
 	ld	a,(ix+0)
 	inc	a
-	jp	z,ce0
+	jr	nz,ce6
+	ld	a,(ix+1)		; into the block: asks again
+	or	a
+	jp	nz,ce0
+	ld	a,(ix+2)
+	cp	high BLK
+	call	z,blkask
+	jp	ce0
+ce6:
 	bit	7,(ix+2)		; off the end of the chunk
 	jp	z,ce0
 	jp	cmd
@@ -204,12 +213,15 @@ cM:	call	getaddr
 	ld	ix,refa
 	call	chkrng
 	call	blkask
-	ld	a,(refa)
-	ld	hl,refb
-	cp	(hl)
+	ld	ix,refa			; the same memory, by any name, overlapping
+	call	pnorm			; upward: backward
+	push	hl
+	ld	c,a
+	ld	ix,refb
+	call	pnorm
+	pop	de
+	cp	c
 	jr	nz,cm5
-	ld	hl,(refb+1)
-	ld	de,(refa+1)
 	or	a
 	sbc	hl,de
 	jr	c,cm5
@@ -217,6 +229,7 @@ cM:	call	getaddr
 	or	a
 	sbc	hl,de
 	jr	nc,cm5
+	ld	ix,refa
 	ld	bc,(rlen)		; to the end of both
 	call	adv
 	ld	ix,refb
@@ -785,28 +798,40 @@ tm3:	ld	a,e
 ; back to the monitor.
 cG:	call	atend
 	jr	z,cg1
-	call	getaddr
+	call	getaddr		; not kept: G alone keeps the file's start
 	call	endl
 	ld	a,(ix+0)
-	ld	(gochunk),a
 	ld	l,(ix+1)
 	ld	h,(ix+2)
-	ld	(goaddr),hl
 	jr	cg2
 cg1:	ld	a,(gohas)
 	or	a
-	jr	nz,cg2
+	jr	nz,cg1a
 	call	eprint
 	db	"No start address yet.",0
-cg2:	ld	a,(gochunk)
-	inc	a
+cg1a:	ld	a,(gochunk)
+	ld	hl,(goaddr)
+cg2:	inc	a			; a chunk address runs where the map
+	jr	z,cg3			; shows its chunk
+	dec	a
+	ld	c,a
+	ld	a,(lowch)
+	cp	c
 	jr	z,cg3
-	call	eprint
-	db	"A chunk address cannot run: give a Z80 address.",0
-cg3:	ld	sp,STACK
+	call	hich
+	cp	c
+	jr	nz,cg_x
+	set	7,h
+	ld	a,h
+	cp	high BLK
+	jr	c,cg3
+cg_x:	call	eprint
+	db	"That chunk is not mapped: give a Z80 address.",0
+cg3:	ex	de,hl
+	ld	sp,STACK
 	ld	hl,cg4
 	push	hl
-	ld	hl,(goaddr)
+	ex	de,hl
 	jp	(hl)
 cg4:	di
 	call	eprint
