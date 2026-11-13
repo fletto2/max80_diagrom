@@ -14,7 +14,11 @@ to a 5.25" or 8" disk and boot on your MAX-80.
   512, sectors from 0, 2:1 interleave, 180K. Boots with DIP setting 1.
 
 The boot ROM tries MFM, then FM, so either density boots, and the boot
-sector reads the rest at the density the ROM found.
+sector reads the rest at the density the ROM found. Sector 1 holds a
+copy of the boot sector, and the program starts in sector 2: when
+sector 0 cannot be read, the ROM loads sector 1 and the disk still
+boots (I294). `tools/mkdisk.py --bad0` makes a disk with sector 0
+unreadable, for the test.
 
 ## Menu
 
@@ -164,6 +168,8 @@ Ready, track 0, write protect, head loaded and seek error come from the
 FDC's type I status. Single sided and the 5.25-inch motors are SYSFLG
 bits 4 and 5. The speed is timed over four turns between index pulses,
 against the 61.035 Hz tick. NO INDEX means no pulse came in a second.
+NO TICK means the tick is not coming, so nothing could be timed
+(I294).
 There is no head lock line on either connector, and the 8-inch one has
 no motor line.
 
@@ -301,7 +307,8 @@ Everything on the screen also goes out SIO channel A at 9600 8N1, with
 VT100 cursor moves, and keys typed on a terminal there work as the
 keyboard does. The program does not use the SIO's auto enables, so a
 cable with nothing on CTS and DCD works. If the transmitter never
-empties, the copy turns itself off.
+empties, the copy turns itself off. A missing SIO, whose status reads
+FFh, is not taken for a key (I294).
 
 ## Memory
 
@@ -310,6 +317,9 @@ The PIO is at 40h, as the boot ROM left it: A1 at 0000h-7FFFh, A2 at
 runs. The program runs in A1 from 1000h,
 the stack, the screen copy and the variables are
 in A1 below 8000h. Interrupts stay off, and the tick is polled.
+If the tick stops, stuck clear or set, the program counts its own
+polls instead, about 4096 a tick, so the keys, the pauses and the
+timeouts still work, slower or faster (I294).
 
 ## Files
 

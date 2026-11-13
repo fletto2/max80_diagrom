@@ -9,6 +9,8 @@ main:	di
 	ldir
 	ld	a,(MLCOPY)		; the boot ROM's MLATCH, still in A1
 	ld	(bootml),a
+	ld	hl,0F00h		; poll's own ticks until a tick
+	ld	(pcnt),hl		; comes: a dead one from boot (I294)
 	ld	a,high BLK
 	ld	(blkhi),a
 	ld	a,1

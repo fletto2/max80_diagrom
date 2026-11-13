@@ -14,6 +14,8 @@ main:	di
 	ld	bc,MVEND-VARS-1
 	ld	(hl),0
 	ldir
+	ld	hl,0F00h		; poll's own ticks until a tick
+	ld	(pcnt),hl		; comes: a dead one from boot (I294)
 	ld	a,high BLK
 	ld	(blkhi),a
 	ld	a,1

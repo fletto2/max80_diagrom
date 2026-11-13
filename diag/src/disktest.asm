@@ -741,7 +741,13 @@ dsh14:	ld	hl,7*256+8
 	ld	a,h
 	or	l
 	jr	nz,dsh15
+	ld	a,(pcnt+1)		; no tick to time the index by: say
+	cp	0Fh			; so, not NO INDEX on a good drive
+	jr	c,dsh14a		; (I294)
 	call	print
+	db	"NO TICK ",0
+	jr	dsh16
+dsh14a:	call	print
 	db	"NO INDEX",0
 	jr	dsh16
 dsh15:	call	pdec16
@@ -972,9 +978,7 @@ dskey:	ld	a,(kkey)
 	or	a
 	scf
 	ret	nz
-	ld	a,(SIOCA)
-	rra
-	ret
+	jp	sioa
 
 ; NZ while the index pulse is on
 didx:	ld	a,(FSTAT)

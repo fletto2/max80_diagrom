@@ -45,6 +45,7 @@ blkhi		equ	VARS+5Dh	; the I/O block's high byte, F0h, 00h in the main RAM test
 pstat		equ	VARS+5Eh	; main RAM: the status line, row then column
 mtag		equ	VARS+60h	; main RAM: the tag of the chunk under test
 blchk		equ	VARS+61h	; banking: chunks the low half check read, bit 0 A1
+pcnt		equ	VARS+62h	; polls since the last tick, 2 bytes
 kcur		equ	VARS+64h	; keyboard test: each row as last drawn, 8 bytes
 kseen		equ	VARS+6Ch	; and the keys pressed so far, 8 bytes
 kdrawn		equ	VARS+74h	; and the keys pressed as last drawn, 8 bytes

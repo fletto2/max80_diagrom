@@ -2,13 +2,22 @@
 ; Interrupts stay off: the tick is polled in SYSFLG bit 7.
 
 ; On a tick: clear it, count it and scan the keyboard. Keeps every
-; register.
+; register. With no tick for 4096 polls, which a tick that works never
+; lets happen, it takes one itself, then one every 256 polls until a
+; tick comes, so a tick stuck clear, or stuck set,
+; which a read of SYSCLR does not clear, leaves the keys working and the
+; timeouts ending (I294).
 poll:	push	af
 	ld	a,(SYSFLG)
 	and	80h
-	jr	z,pl1
+	jr	z,pl2
 	ld	a,(SYSCLR)		; clears the tick
-	push	hl
+	ld	a,(SYSFLG)
+	and	80h
+	jr	nz,pl2			; still set: stuck, not a tick
+pl0:	push	hl
+	ld	hl,0
+pl0a:	ld	(pcnt),hl
 	ld	hl,(ticks)
 	inc	hl
 	ld	(ticks),hl
@@ -16,6 +25,18 @@ poll:	push	af
 	call	kscan
 pl1:	pop	af
 	ret
+pl2:	push	hl
+	ld	hl,(pcnt)
+	inc	hl
+	ld	(pcnt),hl
+	ld	a,h
+	cp	10h
+	jr	nc,pl3
+	pop	hl
+	pop	af
+	ret
+pl3:	ld	hl,0F00h		; with no tick, then every 256 polls,
+	jr	pl0a			; so a key is seen down twice
 
 ; A key counts once it is down in two scans in a row, one tick apart.
 ; The first new one goes in kkey if kkey is empty, and every one is
@@ -120,10 +141,11 @@ inkey:	call	poll
 	ld	(kkey),a
 	pop	af
 	ret
-ik1:	ld	a,(SIOCA)
-	and	1
-	ret	z
-	ld	a,(SIODA)
+ik1:	call	sioa
+	jr	c,ik4
+	xor	a
+	ret
+ik4:	ld	a,(SIODA)
 	or	a
 	jr	nz,ik3
 	ld	a,'@'
@@ -133,6 +155,17 @@ ik3:	cp	'a'
 	jr	nc,ik2
 	sub	20h
 ik2:	or	a
+	ret
+
+; Carry if channel A has a byte. RR0 reading FFh, which a working SIO
+; never shows, is a dead or missing SIO, not a byte on each read: it
+; stopped the keyboard test and the disk test's speed (I294).
+sioa:	ld	a,(SIOCA)
+	cp	0FFh
+	jr	z,sa1
+	rra
+	ret
+sa1:	or	a
 	ret
 
 ; Wait for a key

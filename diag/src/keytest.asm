@@ -88,9 +88,8 @@ tk3:	ld	a,c
 	jr	nz,tk3
 
 tk4:	call	poll
-	ld	a,(SIOCA)
-	and	1
-	jr	z,tk5
+	call	sioa
+	jr	nc,tk5
 	ld	a,(SIODA)
 	jr	tk8
 tk5:	ld	a,(kkey)

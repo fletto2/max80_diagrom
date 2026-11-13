@@ -4,7 +4,10 @@
 ;
 ; It loads the program to 1000h in A1 with the ROM's READ, one sector a
 ; call as Lobo's boot sectors do, moves the I/O block to F000h and jumps
-; in. tools/mkdisk.py sets the sectors a track at offset 2.
+; in. tools/mkdisk.py sets the sectors a track at offset 2. Sector 1 is a
+; copy of this one: when sector 0 cannot be read the ROM loads sector 1
+; to 0400h and runs it, which was the program's middle (I294). The
+; program starts at sector 2.
 
 	org	0400h
 boot:	jr	bstart
@@ -14,7 +17,7 @@ bspt:	db	17			; sectors a track
 bstart:	di
 	ld	hl,1000h		; load address
 	ld	de,0			; track
-	ld	b,1			; sector
+	ld	b,2			; sector, after the boot sector's copy
 	ld	c,PROGSEC		; sectors left
 bload:	push	bc
 	push	de
