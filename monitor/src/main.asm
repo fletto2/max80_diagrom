@@ -664,13 +664,14 @@ cr1:	ret	nc
 
 ; Carry if the rlen bytes at IX reach the monitor: the program or
 ; 7000h-7FFFh of the chunk in the low half. A write at F400h-FBFFh
-; lands in A1 at 7400h-7BFFh, so with the monitor in A1 those too.
+; lands in A1 at 7400h-7BFFh, so with the monitor in A1 those too, and
+; in any chunk F7DCh-F7FCh, VLATCH to the PIO, which would map it out.
 over:	ld	a,(ix+0)
 	cp	0FFh
 	jr	nz,ov0
 	ld	a,(lowch)
 	or	a
-	jr	nz,ov1
+	jr	nz,ovl
 	ld	e,(ix+1)
 	ld	d,(ix+2)
 	ld	hl,(rlen)
@@ -681,6 +682,20 @@ over:	ld	a,(ix+0)
 	jr	c,ov1
 	ex	de,hl
 	ld	bc,0FC00h
+	call	cmphl
+	ex	de,hl
+	ret	c
+	jr	ov1
+ovl:	ld	e,(ix+1)
+	ld	d,(ix+2)
+	ld	hl,(rlen)
+	dec	hl
+	add	hl,de			; HL = the last byte, DE = the first
+	ld	bc,0F7DCh
+	call	cmphl
+	jr	c,ov1
+	ex	de,hl
+	ld	bc,0F7FDh
 	call	cmphl
 	ex	de,hl
 	ret	c

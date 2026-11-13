@@ -223,11 +223,16 @@ cl80:	ld	a,e			; 3 address bytes and the sum
 	cp	4
 	jp	c,lbad
 	ld	a,(BUF)
+	cp	2
+	jp	nc,lrange
 	ld	h,a
 	ld	a,(BUF+1)
 	ld	l,a
 	add	hl,hl
 	ld	a,h
+	ld	hl,nchunk		; a chunk that is there, as for S2
+	cp	(hl)
+	jp	nc,lrange
 	ld	(gochunk),a
 	ld	a,(BUF+1)
 	and	7Fh

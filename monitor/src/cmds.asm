@@ -12,13 +12,14 @@ cD:	call	atend
 	ld	de,refa
 	ld	bc,3
 	ldir
-	ld	hl,DLINES*16
+	call	dlen
 	jr	cd2
 cd1:	call	getaddr
 	call	atend
-	ld	hl,DLINES*16
-	jr	z,cd2
-	call	gethex
+	jr	nz,cd1a
+	call	dlen
+	jr	cd2
+cd1a:	call	gethex
 	ld	a,h
 	or	l
 	jp	z,elen
@@ -202,6 +203,27 @@ cf1:	call	nextn
 cf2:	call	eprint
 	db	"Filled.",0
 
+; HL = D's length when none is given: DLINES lines, or to the end of
+; memory or of the chunk if that comes first
+dlen:	ld	l,(ix+1)
+	ld	h,(ix+2)
+	ld	a,(ix+0)
+	inc	a
+	ld	de,0
+	jr	z,dz1
+	ld	de,8000h
+dz1:	ex	de,hl
+	or	a
+	sbc	hl,de			; the bytes to the end, 0 for 10000h
+	ld	a,h
+	or	l
+	jr	z,dz2
+	ld	bc,DLINES*16
+	call	cmphl
+	ret	c
+dz2:	ld	hl,DLINES*16
+	ret
+
 ; M from to len, through BUF, so the two can be in different chunks.
 ; Backward when the same memory overlaps upward.
 cM:	call	getaddr
@@ -213,7 +235,20 @@ cM:	call	getaddr
 	ld	ix,refa
 	call	chkrng
 	call	blkask
-	ld	ix,refa			; the same memory, by any name, overlapping
+	ld	a,(refa)		; two Z80 addresses: overlapping upward
+	ld	hl,refb			; as the Z80 sees them, backward, even
+	and	(hl)			; when the from crosses 8000h into
+	inc	a			; another chunk
+	jr	nz,cmz1
+	ld	hl,(refb+1)
+	ld	de,(refa+1)
+	or	a
+	sbc	hl,de
+	jr	c,cmz1
+	ld	de,(rlen)
+	sbc	hl,de
+	jr	c,cmz2
+cmz1:	ld	ix,refa			; the same memory, by any name, overlapping
 	call	pnorm			; upward: backward
 	push	hl
 	ld	c,a
@@ -229,7 +264,7 @@ cM:	call	getaddr
 	or	a
 	sbc	hl,de
 	jr	nc,cm5
-	ld	ix,refa
+cmz2:	ld	ix,refa
 	ld	bc,(rlen)		; to the end of both
 	call	adv
 	ld	ix,refb
@@ -833,7 +868,16 @@ cg3:	ex	de,hl
 	push	hl
 	ex	de,hl
 	jp	(hl)
-cg4:	di
+cg4:	di				; the program may have moved the block
+	ld	a,(vlnow)		; or changed the PIO: the latches as the
+	ld	(B_VLATCH),a		; monitor left them, the block at 0000h
+	ld	(VLATCH),a		; or at F000h, then the PIO
+	ld	a,(pionow)
+	ld	(PIODA),a
+	ld	a,0FFh
+	ld	(curmap),a
+	ld	a,high BLK
+	ld	(blkhi),a
 	call	eprint
 	db	"Back in the monitor.",0
 
