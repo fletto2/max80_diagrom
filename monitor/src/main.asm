@@ -163,6 +163,9 @@ brk:	push	hl
 	ld	h,a
 	ld	l,low SIOCA
 	ld	a,(hl)
+	inc	a			; FFh: no SIO, or a dead one
+	jr	z,bk9
+	dec	a
 	rrca
 	jr	nc,bk9
 	ld	l,low SIODA
@@ -383,10 +386,14 @@ mk4:	cp	','
 mk9:	or	a
 	ret
 mk6:	ld	a,(SIOCA)
+	cp	0FFh			; no SIO, or a dead one: no key
+	jr	z,mk7
 	and	1
 	ret	z
 	ld	a,(SIODA)
 	and	7Fh
+	ret
+mk7:	xor	a
 	ret
 
 ; Waits for a key, with the cursor up
@@ -762,7 +769,9 @@ blkask:	ld	a,(ix+0)
 	ret	c
 	call	print
 	db	"That is the I/O block: a read of 7E0h clears the tick. Y goes on:",0
-	call	waitk
+bka1:	call	waitk
+	cp	0Ah			; the LF after a terminal's CR
+	jr	z,bka1
 	push	af
 	call	crlf
 	pop	af

@@ -21,7 +21,9 @@ the disk was made, and the RAM it found:
 The console is the screen and keyboard, and SIO channel A at 9600, at
 the same time. The prompt names the chunk the monitor runs in, `A1>` at
 boot. `?` or `H` lists the commands. Numbers are hex. ESC or BREAK
-stops a long command, from either console.
+stops a long command, from either console. A dead or missing SIO,
+which reads FFh, is taken as nothing coming in, so the screen and
+keyboard work alone. A terminal may end a line with CR LF.
 
 An address is `1234`, a Z80 address through the map as it stands, or
 `A2:1234`, an offset of 0000h to 7FFFh in chunk A1, A2, B1 or B2. The

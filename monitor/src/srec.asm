@@ -10,9 +10,11 @@ rc1:	ld	a,(blkhi)
 	ld	h,a
 	ld	l,low SIOCA
 	ld	a,(hl)
+	cp	0FFh			; no SIO, or a dead one: nothing comes
+	jr	z,rc0
 	rrca
 	jr	c,rc2
-	call	brkk
+rc0:	call	brkk
 	jr	rc1
 rc2:	ld	l,low SIODA
 	ld	a,(hl)
@@ -50,6 +52,8 @@ drain:	push	bc
 	ld	bc,8192
 dr0:	ld	de,5000
 dr1:	ld	a,(SIOCA)
+	cp	0FFh			; no SIO, or a dead one: quiet
+	jr	z,dr2
 	rrca
 	jr	nc,dr2
 	ld	a,(SIODA)
