@@ -347,6 +347,8 @@ errd:	push	bc
 	jr	err1
 erre:	push	bc
 	ld	c,e
+	jr	err1
+errc:	push	bc			; C was written
 err1:	ld	b,a
 	xor	c
 	or	(ix+2)
@@ -389,23 +391,50 @@ ck1:	pop	hl
 	scf
 	ret
 
-; C = a chunk other than A1 that passed. Carry if there is none.
+; C = a chunk other than A1 that passed, and showed its own tag in the
+; low half. Carry if there is none.
 ggood:	ld	c,1
 gg1:	ld	a,(nchunk)
 	cp	c
 	scf
 	ret	z
 	call	cok
-	ret	nc
-	inc	c
+	jr	c,gg2
+	call	ctag
+	push	hl
+	push	bc
+	ld	b,0
+	ld	hl,blow
+	add	hl,bc
+	cp	(hl)
+	pop	bc
+	pop	hl
+	ret	z			; and carry clear
+gg2:	inc	c
 	jr	gg1
 
-; The program, 1000h-7FFFh, into the chunk in the high half
+; The program, 1000h-7FFFh, into the chunk in the high half, then read
+; back: March U writes only 00h and FFh, so two data bits shorted pass
+; it, and a copy with them would crash. The first byte that
+; differs goes into the result at IX, and the check stops there, as its
+; own stack and result writes change the program under it.
 pcopy:	ld	hl,1000h
 	ld	de,9000h
 	ld	bc,7000h
 	ldir
+	ld	hl,1000h
+	ld	de,9000h
+pc1:	ld	a,(de)
+	cp	(hl)
+	jr	nz,pc2
+	inc	hl
+	inc	de
+	bit	7,h
+	jr	z,pc1
 	ret
+pc2:	ld	c,(hl)
+	ex	de,hl
+	jp	errc
 
 ; Each good chunk gets a copy of the program with its tag at SIG, then
 ; each in turn is put in the low half, the code going on from its copy,
@@ -424,9 +453,12 @@ bl1:	ld	a,(nchunk)
 	call	piohi
 	push	bc
 	push	de
+	call	cres
 	call	pcopy
 	pop	de
 	pop	bc
+	call	cok			; and the copy read back right
+	jr	c,bl2
 	call	ctag
 	ld	(SIG+8000h),a
 	call	cbit
@@ -508,8 +540,11 @@ tma1:	ld	c,0
 	add	a,a
 	ld	b,a			; chunk C low, A1 high
 	push	bc
+	call	cres
 	call	pcopy
 	pop	bc
+	call	cok			; the copy read back right
+	ret	c
 	ld	a,b
 	ld	(B_PIODA),a
 	ld	c,0
