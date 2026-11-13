@@ -32,11 +32,11 @@ chunk form reaches all of a chunk, the part under the I/O block too.
 | `D addr [len]` | Dump, 21 lines a screen, or to the end of memory or the chunk. `D` alone goes on |
 | `E addr` | Edit: hex and Enter writes and reads back, Enter alone goes on, a dot or ESC ends |
 | `F addr len byte` | Fill |
-| `M from to len` | Move, also between chunks and over itself |
+| `M from to len` | Move, also between chunks and over itself. From a Z80 range across 8000h to a chunk address it says to move each side by itself (I292) |
 | `S addr len bytes` | Search: hex bytes, a `"string"`, or both, up to 32 bytes. The first 16 places, then a count |
 | `C addr addr len` | Compare: the first 16 differences, then a count |
 | `K addr len` | An 8-bit sum and CRC-16/XMODEM |
-| `G [addr]` | Go, a `RET` comes back, with the block and the PIO put back as the monitor had them. Alone, the start an S-record file gave. A chunk address runs only where the map shows that chunk |
+| `G [addr]` | Go, a `RET` comes back, with the PIO put back as the monitor had it, and the block when the program left it at 0000h or F000h; a program that moves it anywhere else must put it back. The return writes VLATCH's RAM copy, 07DCh of the low chunk. Alone, the start an S-record file gave. A chunk address runs only where the map shows that chunk |
 | `L` | Load S-records from channel A |
 | `P addr len` | Punch S-records to channel A alone |
 | `T addr len` | Test: 55h, AAh, 00h, FFh and the address, each written over all of it and read back. One pass |
@@ -50,17 +50,20 @@ quotes everything is taken as upper case.
 `F`, `M`, `T`, `L` and `E` refuse the monitor's own memory: the program
 from 1000h and 7000h-7FFFh of the chunk in the low half, and with the
 monitor in A1, F400h-FBFFh, whose writes land there, and in any chunk
-F7DCh-F7FCh, VLATCH to the PIO, which would map it out. A Z80 address
+F7DCh-F7FDh, VLATCH to the PIO's control port A, which would map it out. A Z80 address
 in the block at F000h says so and asks before a command goes on, since
 reads reach the devices, and `E` asks again when it steps into the
 block.
 
 `L` takes S1 records, and S2 where 00000h-1FFFFh are the four chunks in
 order, A1, A2, B1 and B2. S9 and S8 end it and give the start for `G`, an S8 start in a chunk
-that is there. S0, S5 and S6 are skipped, and anything between records. Nothing
+that is there. S0, S5 and S6 are skipped. Anything before the first
+record is skipped, a banner, and an S with no type digit after it is a
+word in it. After the first record only blanks and line ends: a record
+whose S was lost stops the load at its line (I292). Nothing
 is shown and nothing is sent until the end. A bad line stops the load
 with its number, and the rest of the file is waited out, not run as
-commands. RTS is not used.
+commands, for up to 8K bytes. RTS is not used.
 
 ## Bad RAM in A1
 

@@ -424,6 +424,9 @@ gl1:	push	bc
 	ld	a,b
 	cp	LINEMAX
 	jr	nc,gl1
+	ld	a,(ccol)		; nor past the screen's last column:
+	cp	79			; a wrapped line's rub out wrote
+	jr	nc,gl1			; outside the screen (I292)
 	ld	a,c
 	cp	'"'
 	call	z,qflip
@@ -665,7 +668,7 @@ cr1:	ret	nc
 ; Carry if the rlen bytes at IX reach the monitor: the program or
 ; 7000h-7FFFh of the chunk in the low half. A write at F400h-FBFFh
 ; lands in A1 at 7400h-7BFFh, so with the monitor in A1 those too, and
-; in any chunk F7DCh-F7FCh, VLATCH to the PIO, which would map it out.
+; in any chunk F7DCh-F7FDh, VLATCH to the PIO's control port A, which would map it out.
 over:	ld	a,(ix+0)
 	cp	0FFh
 	jr	nz,ov0
@@ -695,8 +698,8 @@ ovl:	ld	e,(ix+1)
 	call	cmphl
 	jr	c,ov1
 	ex	de,hl
-	ld	bc,0F7FDh
-	call	cmphl
+	ld	bc,0F7FEh		; PIOCA too: a mode word maps the
+	call	cmphl			; monitor out (I292)
 	ex	de,hl
 	ret	c
 	jr	ov1

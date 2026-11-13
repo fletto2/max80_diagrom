@@ -41,6 +41,7 @@ lptr		equ	MV+3Ah		; and where they are, 2 bytes
 inload		equ	MV+3Ch		; nonzero: a stop has a file to wait out
 psum		equ	MV+3Dh		; P: the record's sum
 rtgt		equ	MV+3Eh		; RUN: the chunk to go to
+lfirst		equ	MV+3Fh		; L: nonzero once a record is read
 MVEND		equ	MV+40h
 
 LINEMAX		equ	72

@@ -224,6 +224,9 @@ dz1:	ex	de,hl
 dz2:	ld	hl,DLINES*16
 	ret
 
+ecross:	call	eprint
+	db	"That crosses 8000h. Move each side by itself.",0
+
 ; M from to len, through BUF, so the two can be in different chunks.
 ; Backward when the same memory overlaps upward.
 cM:	call	getaddr
@@ -235,7 +238,23 @@ cM:	call	getaddr
 	ld	ix,refa
 	call	chkrng
 	call	blkask
-	ld	a,(refa)		; two Z80 addresses: overlapping upward
+	ld	a,(refa)		; from a Z80 range across 8000h to a
+	inc	a			; chunk address: its two halves are two
+	jr	nz,cmx			; chunks, and one tested place cannot
+	ld	a,(refb)		; tell an overlap with the upper (I292)
+	inc	a
+	jr	z,cmx
+	ld	hl,(refa+1)
+	ld	a,h
+	cp	80h
+	jr	nc,cmx
+	ld	de,(rlen)
+	add	hl,de
+	dec	hl			; the last byte
+	ld	a,h
+	cp	80h
+	jp	nc,ecross
+cmx:	ld	a,(refa)		; two Z80 addresses: overlapping upward
 	ld	hl,refb			; as the Z80 sees them, backward, even
 	and	(hl)			; when the from crosses 8000h into
 	inc	a			; another chunk

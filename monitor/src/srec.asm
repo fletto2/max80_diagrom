@@ -44,17 +44,26 @@ rdbyte:	call	rdch
 	ret
 
 ; Waits until channel A has been quiet for about 40 ms, so that the rest
-; of a file is not taken for commands
-drain:	ld	de,5000
+; of a file is not taken for commands, or 8K bytes have gone by: a sender
+; that never stops, or noise, does not hang the monitor (I292). Keeps BC.
+drain:	push	bc
+	ld	bc,8192
+dr0:	ld	de,5000
 dr1:	ld	a,(SIOCA)
 	rrca
 	jr	nc,dr2
 	ld	a,(SIODA)
-	jr	drain
+	dec	bc
+	ld	a,b
+	or	c
+	jr	nz,dr0
+	pop	bc
+	ret
 dr2:	dec	de
 	ld	a,d
 	or	e
 	jr	nz,dr1
+	pop	bc
 	ret
 
 cL:	call	endl
@@ -67,16 +76,49 @@ cL:	call	endl
 	ld	(lcount),hl
 	xor	a
 	ld	(gohas),a
+	ld	(lfirst),a
 
-cl1:	call	rdch			; anything but S between records
+; Before the first record anything is skipped, a banner, and an S with
+; no type digit after it is a word in it. After the first only blanks
+; and line ends: a lost S, or a lost byte of one, stops the load at that
+; line, where the rest of a record was taken for text (I292)
+cl1:	call	rdch
+	ld	c,a
 	and	0DFh
 	cp	'S'
-	jr	nz,cl1
+	jr	z,cl1s
+	ld	a,(lfirst)
+	or	a
+	jr	z,cl1
+	ld	a,c
+	cp	0Dh
+	jr	z,cl1
+	cp	0Ah
+	jr	z,cl1
+	cp	' '
+	jr	z,cl1
+	cp	9
+	jr	z,cl1
+	or	a
+	jr	z,cl1
+	jr	clbad
+cl1s:	call	rdch
+	ld	(ltype),a
+	sub	'0'
+	cp	10
+	jr	c,cl1r
+	ld	a,(lfirst)
+	or	a
+	jr	z,cl1
+clbad:	ld	hl,(lcount)
+	inc	hl
+	ld	(lcount),hl
+	jp	lbad
+cl1r:	ld	a,1
+	ld	(lfirst),a
 	ld	hl,(lcount)
 	inc	hl
 	ld	(lcount),hl
-	call	rdch
-	ld	(ltype),a
 	xor	a
 	ld	(lsum),a
 	call	rdbyte
@@ -103,11 +145,11 @@ cl2:	call	rdbyte
 	cp	'8'
 	jp	z,cl80
 	cp	'0'
-	jr	z,cl1
+	jp	z,cl1
 	cp	'5'
-	jr	z,cl1
+	jp	z,cl1
 	cp	'6'
-	jr	z,cl1
+	jp	z,cl1
 	call	lline
 	db	"not a record L takes.",0
 
@@ -115,7 +157,7 @@ cl2:	call	rdbyte
 cl10:	ld	a,e
 	sub	3
 	jp	c,lbad
-	jr	z,cl1
+	jp	z,cl1
 	ld	l,a
 	ld	h,0
 	ld	(lnum),hl
