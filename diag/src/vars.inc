@@ -88,7 +88,8 @@ vlf		equ	VARS+0B8h	; and lines a frame x 10, 2 bytes
 vt01		equ	VARS+0BAh	; and the line period in 0.1 us, 2 bytes
 vres		equ	VARS+0BCh	; and 0, or what stopped the measuring
 dkpend		equ	VARS+0BCh	; disk test: a key kept by dcmd, 0 none, over vres
-did		equ	VARS+0B0h	; disk test: an ID field, 6 bytes, over vpic-vil
+did		equ	VARS+1F9h	; disk test: an ID field, 6 bytes and a 7th at
+				; 1FFh: inc e wraps there, a DRQ that stays stops
 dmap		equ	VARS+0B6h	; and the sectors seen, a bit each, 4 bytes, over vit-vlf
 dmiss		equ	VARS+0BAh	; and the reads that found no ID, over vt01
 drun		equ	VARS+0BBh	; and those in a row

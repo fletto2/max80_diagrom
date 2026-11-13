@@ -328,6 +328,9 @@ dkids:	ld	hl,20
 	call	print
 	db	TH,"ID fields under the head:",TK,0
 	call	clreol
+	ld	hl,22			; a long line runs onto 22
+	call	at
+	call	clreol
 	ld	hl,21
 	call	at
 	call	clreol
@@ -364,6 +367,8 @@ dki5:	ld	a,(FSTAT)		; the index, bit 1, low when there
 	db	"NONE: no index pulses, no disk in or the drive not turning",0
 	ret
 dki2:	call	dkside1
+	ld	a,0D0h xor 0FFh		; type I status again, for the lines
+	ld	(FCTRL),a		; above, which read it as such
 	xor	a
 	ld	(dfm),a
 	jp	dlatchw
@@ -547,7 +552,8 @@ dkr2:	and	(hl)			; a bit cleared by DRQ or INTRQ
 	ld	a,(bc)
 	cpl
 	ld	(de),a
-	inc	de
+	inc	e			; a 7th byte wraps E: DRQ stuck, stop
+	jp	z,dkstop
 	jp	dkr1
 dkr3:	jp	po,dkr4			; INTRQ: the command is over
 	dec	ixl
@@ -555,9 +561,8 @@ dkr3:	jp	po,dkr4			; INTRQ: the command is over
 	dec	ixh
 	jp	nz,dkr2
 	jp	dkstop
-dkr4:	ld	hl,did+6		; six bytes, or no ID was found
-	or	a
-	sbc	hl,de
+dkr4:	ld	a,e			; six bytes, or no ID was found
+	cp	low (did+6)
 	jp	nz,dknone
 dki10:	ld	a,(FSTAT)
 	cpl

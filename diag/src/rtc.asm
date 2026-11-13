@@ -163,6 +163,8 @@ rtb2:	ld	a,b
 ; A to register 3 under HOLD. Port A goes to all outputs for the write,
 ; with the RAM bits kept, then back to bits 3-0 in.
 rtput:	push	af
+	ld	a,RT_HOLD+3		; READ off before port A drives: the
+	ld	(PIODB),a		; chip's outputs are on under READ
 	ld	a,0CFh
 	ld	(PIOCA),a
 	xor	a

@@ -29,7 +29,8 @@ vt2:	call	waitkey
 	jr	vt1
 
 ; Measure: vres 0 if every value was found, else 1 stuck off, 2 stuck
-; on, 3 no vertical blank, 4 too few lines of picture to time
+; on, 3 no vertical blank, 4 too few lines of picture to time, 5 no
+; tick to time the lines by
 vmeas:	ld	a,1
 	ld	(vres),a
 	ld	c,0			; off until it comes on
@@ -86,11 +87,15 @@ vm2:	ld	(vpic),hl
 	call	vedge
 	ret	c
 	ld	(vif),hl
+	ld	a,5			; no tick, SYSFLG bit 7
+	ld	(vres),a
 	ld	a,(SYSCLR)		; ticks: from the first that comes
 	ld	de,1
 	call	vtick
+	ret	c
 	ld	de,VTN
 	call	vtick
+	ret	c
 	ld	(vit),hl
 	ld	hl,(ticks)
 	ld	de,VTN+1
@@ -221,7 +226,7 @@ vsh1:	call	puts
 	or	a
 	jr	z,vsh2
 	cp	4
-	jr	z,vsh2
+	jr	nc,vsh2
 	call	print			; stuck, or no long off run
 	db	"NO",0
 	ld	l,5
@@ -243,10 +248,15 @@ vsh2:	call	print
 	ld	a,(vres)
 	or	a
 	jr	z,vsh5
+	cp	5
+	jr	z,vsh4
 	call	print
 	db	TH,", too few to time",TK,0
-	ld	l,6
-	jr	vsh3
+	jr	vsh4a
+vsh4:	call	print
+	db	TH,", no tick (SYSFLG bit 7) to time it",TK,0
+vsh4a:	ld	l,6
+	jp	vsh3
 vsh5:	ld	bc,(vif)		; lines a frame x 10 = vif x 500 / vil
 	ld	de,500
 	call	setdvd
