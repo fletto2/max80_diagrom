@@ -73,12 +73,15 @@ reached. It takes about 16 seconds, with a status line on the screen
 and the serial port giving the chunk, the March U step and the errors
 so far.
 
-1. Bank B is looked for, as the boot ROM does. Without it only A1 and
-   A2 are tested.
+1. Bank B is looked for: it is there if any bit of B1 keeps a 0 and a
+   1, so a bank with a dead 4164 is tested and the 4164 named (I293).
+   Without it only A1 and A2 are tested.
 2. Banking, high half: each chunk gets its own tag, A1h, A2h, B1h or
-   B2h, then each is read back. A chunk that shows another's tag is
-   decoded wrong. Both chunks are left out of the March U test, since a
-   march on a chunk that lands in A1 would wipe out the program.
+   B2h, then each is read back. A chunk that shows another's tag, where
+   a write to it reaches that chunk, is decoded wrong. Both chunks are
+   left out of the March U test, since a march on a chunk that lands in
+   A1 would wipe out the program. A wrong tag that a write does not
+   carry over is a bad cell, and March U names it (I293).
 3. March U on A2, B1 and B2, 13 operations a byte: up w0, up r0 w1 r1
    w0, up r0 w1, down r1 w0 r0 w1, down r1 w0. Every error is counted
    and its bits kept, so one bad bit does not hide another.
@@ -199,7 +202,9 @@ COM8116 rates, D and T turn DTR and RTS on and off, K holds TxD at
 space (break), S sends a test line over and over, C clears the bytes
 received. CTS, DCD and break on RxD are read live from RR0. The bytes
 received are counted and the last 8 shown in hex. A byte on channel A
-is also taken as a key, so a terminal there can run the test. The Z80
+is also taken as a key, so a terminal there can run the test, but not
+while either channel sends the test line: then only ESC and ^C are
+keys, so a loopback onto RxD A shows the line coming back (I293). The Z80
 SIO has no loopback mode, so an output is checked with a scope or
 meter, or by wiring it to an input of the same port. ESC sets channel
 A back to 9600 and resets channel B, which turns its outputs off.

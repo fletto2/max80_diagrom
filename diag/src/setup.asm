@@ -95,36 +95,41 @@ gtab:	block	16,0FFh
 	db	0FFh,0,0FFh,0,0FFh,0,0FFh,0,0FFh,0,0FFh,0,0FFh,0,0FFh,0
 NGLYPH	equ	($-gtab)/16
 
-; Bank B is there if B1 keeps 55h and AAh at two addresses at once,
-; then the two swapped. One byte read straight after its write, as the
-; boot ROM checks, can pass on a floating bus that still holds it.
+; Bank B is there if any bit of B1 keeps a 0 and a 1. Each of two bytes
+; is written before its neighbour, then read back, so a floating bus
+; that reads FFh, or holds the last byte written, keeps no bit of it. A
+; bank with a dead 4164 keeps the other bits and is tested, where a bad
+; bit at 8000h or 8001h called it not there (I293).
 findb:	ld	a,80h			; B1 high
 	ld	(B_PIODA),a
 	ld	hl,8000h
-	ld	de,55AAh
-	call	fbpair
-	jr	nz,fb1
-	ld	de,0AA55h
-	call	fbpair
-	jr	nz,fb1
+	ld	de,8001h
+	call	fbkept
+	ld	c,a
+	ex	de,hl
+	call	fbkept
+	or	c
 	ld	a,4
-	jr	fb2
-fb1:	ld	a,2
+	jr	nz,fb2
+	ld	a,2
 fb2:	ld	(nchunk),a
 	ld	a,40h
 	ld	(B_PIODA),a
 	ret
 
-; D to HL, E to HL+1, then both read back. Z if both kept.
-fbpair:	ld	(hl),d
-	inc	hl
-	ld	(hl),e
-	dec	hl
+; The bits of (HL) that read back 55h and AAh, each written before
+; (DE) is written the other.
+fbkept:	ld	(hl),55h
+	ld	a,0AAh
+	ld	(de),a
 	ld	a,(hl)
-	cp	d
-	ret	nz
-	inc	hl
+	xor	0AAh			; 1 where it reads 55h's bit
+	ld	b,a
+	ld	(hl),0AAh
+	ld	a,55h
+	ld	(de),a
 	ld	a,(hl)
-	dec	hl
-	cp	e
+	xor	55h			; 1 where it reads AAh's bit
+	and	b
 	ret
+

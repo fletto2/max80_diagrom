@@ -193,34 +193,71 @@ bh2:	call	piohi
 	jr	nz,bh3
 	ld	a,(TAG2)
 bh3:	ld	(hl),a
-	cp	d
-	call	nz,bhbad
 	inc	hl
 	inc	c
 	djnz	bh2
+	ld	c,0			; then each that read another value
+	ld	hl,bhigh
+bh4:	call	ctag
+	cp	(hl)
+	call	nz,bhbad
+	inc	hl
+	inc	c
+	ld	a,(nchunk)
+	cp	c
+	jr	nz,bh4
 	ret
 
-; Chunk C read A, not its tag: C and the chunk whose tag it shows share
-; storage, and a march on either could land on the program
+; Chunk C read (HL), not its tag. It shares storage with the chunk whose
+; tag it shows only if a write to C reaches that chunk: then a march on
+; either could land on the program, and both are unsafe. Else a cell
+; under the tag is bad, a data fault the march names: C counts as
+; decoded right (I293), where it was called aliased and never marched.
 bhbad:	push	bc
 	push	hl
-	ld	e,a
-	call	cbit
+	ld	e,(hl)
+	ld	b,c			; B = C, C = the chunk whose tag it is
+	ld	c,0
+bb1:	ld	a,c
+	cp	b
+	jr	z,bb2
+	call	ctag
+	cp	e
+	jr	z,bb3
+bb2:	inc	c
+	ld	a,(nchunk)
+	cp	c
+	jr	nz,bb1
+	jr	bb5			; nobody's tag
+bb3:	push	bc			; a write to B shows in C?
+	ld	c,b
+	call	piohi
+	ld	a,5Ah
+	ld	(8000h),a
+	ld	(TAG2),a
+	pop	bc
+	call	piohi
+	ld	a,(8000h)
+	cp	5Ah
+	jr	z,bb4
+	ld	a,(TAG2)
+	cp	5Ah
+	jr	nz,bb5
+bb4:	call	cbit			; aliased: both unsafe
 	ld	hl,bunsafe
 	or	(hl)
 	ld	(hl),a
-	ld	b,4
-	ld	c,0
-bb1:	call	ctag
-	cp	e
-	jr	nz,bb2
+	ld	c,b
 	call	cbit
 	or	(hl)
 	ld	(hl),a
-bb2:	inc	c
-	djnz	bb1
 	pop	hl
 	pop	bc
+	ret
+bb5:	pop	hl			; a data fault: shown as its own tag
+	pop	bc
+	call	ctag
+	ld	(hl),a
 	ret
 
 ; A = the bit of chunk C
