@@ -838,8 +838,21 @@ pof1:	call	print
 ; A loop counts its turns over DIDXN turns of the disk, and over whole
 ; ticks, 61.035 a second, which gives its speed. So RPM =
 ; 3662 x DIDXN x (turns a tick span) / (ticks x turns over DIDXN turns).
+; With no tick (poll's own, pcnt 0F00h up) there is nothing to time
+; by, and the count below, which sees ticks only in SYSFLG, would run
+; DIDXN turns with no key scanned: keys pressed then were lost.
+; Then it only waits, polling, until a key or poll's second, drpm 0 so
+; the display says NO TICK.
 dspeed:	ld	hl,(ticks)
 	ld	(dt0),hl
+	ld	a,(pcnt+1)
+	cp	0Fh
+	jr	c,dsp1
+dsp0:	call	dsgate
+	jr	nc,dsp0
+	ld	hl,0
+	ld	(drpm),hl
+	ret
 dsp1:	call	dsgate			; the pulse to end
 	ret	c
 	call	didx
