@@ -54,6 +54,7 @@ BANK_SYS	equ	10h
 BANK_TPA	equ	20h
 BANK_B2		equ	30h
 LIBFN		equ	200		; BDOS function: a call into the C library
+OVLFN		equ	201		; BDOS function: run FORMAT's or SYS's overlay
 
 ; Common RAM in the holes of the I/O block, A1's own DRAM
 CBUF		equ	0F400h		; 128-byte bounce buffer, kernel <-> user
@@ -62,6 +63,9 @@ CVARS		equ	0F500h		; common variables, 256 bytes
 STKTOP		equ	0F700h		; system stack, F600h-F6FFh
 ISRSTK		equ	0F7C0h		; the tick's stack, from F700h
 FMTBUF		equ	8000h		; FORMAT's track, in the TPA's common part
+FMTSZ		equ	11900		; 18 sectors of 1.44M, gap 84
+OVLORG		equ	0AF00h		; FORMAT's and SYS's code, above the track
+	assert	FMTBUF+FMTSZ <= OVLORG
 KRING		equ	0F900h		; key ring, 128 bytes, page aligned
 ALV		equ	0F980h		; allocation vector for function 27
 ALVSZ		equ	512
